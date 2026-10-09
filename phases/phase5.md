@@ -1,9 +1,10 @@
 Phase 5 completion checklist
 
-BM25 progress
-Installed `rank-bm25'
-Created `app/retrieval/bm25.py`
-Confirmed chunks exist in PostgreSQL
+Implemented tokenization
+Implemented BM25 scoring without a BM25 library
+Connected retrieval to PostgreSQL
+Passed the unit tests
+Ran searches on real legal chunks
 Ran a keyword query successfully
 Verified that each result links to its judgment
 Tested more than one query
