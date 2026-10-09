@@ -3,3 +3,5 @@ python-dotenv
 beautifulsoup4
 psycopg[binary]
 rank-bm25
+sentence-transformers
+numpy
