@@ -2,3 +2,4 @@ requests
 python-dotenv
 beautifulsoup4
 psycopg[binary]
+rank-bm25
