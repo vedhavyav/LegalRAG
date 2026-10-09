@@ -1,0 +1,73 @@
+{
+  "query": "anticipatory bail",
+  "page": 0,
+  "requested_documents": 10,
+  "started_at": "2026-10-09T05:10:23.604635+00:00",
+  "results": [
+    {
+      "document_id": "1783708",
+      "status": "success",
+      "title": "Section 438 in The Code of Criminal Procedure, 1973",
+      "text_length": 14683
+    },
+    {
+      "document_id": "1108032",
+      "status": "success",
+      "title": "Siddharam Satlingappa Mhetre vs State Of Maharashtra And Ors on 2 December, 2010",
+      "text_length": 102147
+    },
+    {
+      "document_id": "123660783",
+      "status": "success",
+      "title": "Sushila Aggarwal vs State (Nct Of Delhi) on 29 January, 2020",
+      "text_length": 266559
+    },
+    {
+      "document_id": "1308768",
+      "status": "success",
+      "title": "Gurbaksh Singh Sibbia Etc vs State Of Punjab on 9 April, 1980",
+      "text_length": 104441
+    },
+    {
+      "document_id": "199473647",
+      "status": "success",
+      "title": "M/S Neeharika, Infrastructure Pvt. ... vs The State Of Maharashtra on 13 April, 2021",
+      "text_length": 109250
+    },
+    {
+      "document_id": "90251163",
+      "status": "success",
+      "title": "P. Chidambaram vs Directorate Of Enforcement on 5 September, 2019",
+      "text_length": 90580
+    },
+    {
+      "document_id": "138839044",
+      "status": "success",
+      "title": "Vilas Pandurang Pawar & Anr vs State Of Maharashtra & Ors on 10 September, 2012",
+      "text_length": 11300
+    },
+    {
+      "document_id": "588723",
+      "status": "success",
+      "title": "Sureshchandra Ramanlal Mehta vs State Of Gujarat & Anr on 15 May, 2008",
+      "text_length": 6706
+    },
+    {
+      "document_id": "117859307",
+      "status": "skipped_existing",
+      "title": "Nikesh Tarachand Shah vs Union Of India on 23 November, 2017"
+    },
+    {
+      "document_id": "14886794",
+      "status": "success",
+      "title": "Sumit Mehta vs State Of N.C.T. Of Delhi on 13 September, 2013",
+      "text_length": 14553
+    }
+  ],
+  "finished_at": "2026-10-09T05:10:29.529304+00:00",
+  "summary": {
+    "success": 9,
+    "skipped": 1,
+    "failed": 0
+  }
+}
