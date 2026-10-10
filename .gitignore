@@ -1,6 +1,5 @@
 .env
 __pycache__/
-data/raw/
 .venv
-data/processed
 SQL QUERIES
+data/
