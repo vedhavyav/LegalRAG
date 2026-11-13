@@ -23,16 +23,9 @@ def search(query: str, top_k: int = 5) -> list[dict]:
     ranked = bm25.rank(query)
 
     results = []
-    seen_sources = set()
 
-    for index, score in ranked:
+    for index, score in ranked[:top_k]:
         result = chunks[index]
-
-        if result["source_id"] in seen_sources:
-            continue
-
-        seen_sources.add(result["source_id"])
-
         item = result.copy()
         item["score"] = score
         results.append(item)

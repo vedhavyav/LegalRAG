@@ -1,0 +1,99 @@
+{
+  "dataset_name": "LegalRAG Retrieval Evaluation Relevance Judgments",
+  "version": "1.0",
+  "instructions": "Populate after reviewing pooled retrieval candidates. Use grade 1=partially relevant, 2=relevant, 3=highly relevant. Do not treat unjudged candidates as non-relevant.",
+  "queries": [
+    {
+      "query_id": "Q001",
+      "relevant_chunks": []
+    },
+    {
+      "query_id": "Q002",
+      "relevant_chunks": []
+    },
+    {
+      "query_id": "Q003",
+      "relevant_chunks": []
+    },
+    {
+      "query_id": "Q004",
+      "relevant_chunks": []
+    },
+    {
+      "query_id": "Q005",
+      "relevant_chunks": []
+    },
+    {
+      "query_id": "Q006",
+      "relevant_chunks": []
+    },
+    {
+      "query_id": "Q007",
+      "relevant_chunks": []
+    },
+    {
+      "query_id": "Q008",
+      "relevant_chunks": []
+    },
+    {
+      "query_id": "Q009",
+      "relevant_chunks": []
+    },
+    {
+      "query_id": "Q010",
+      "relevant_chunks": []
+    },
+    {
+      "query_id": "Q011",
+      "relevant_chunks": []
+    },
+    {
+      "query_id": "Q012",
+      "relevant_chunks": []
+    },
+    {
+      "query_id": "Q013",
+      "relevant_chunks": []
+    },
+    {
+      "query_id": "Q014",
+      "relevant_chunks": []
+    },
+    {
+      "query_id": "Q015",
+      "relevant_chunks": []
+    },
+    {
+      "query_id": "Q016",
+      "relevant_chunks": []
+    },
+    {
+      "query_id": "Q017",
+      "relevant_chunks": []
+    },
+    {
+      "query_id": "Q018",
+      "relevant_chunks": []
+    },
+    {
+      "query_id": "Q019",
+      "relevant_chunks": []
+    },
+    {
+      "query_id": "Q020",
+      "relevant_chunks": []
+    },
+    {
+      "query_id": "Q021",
+      "relevant_chunks": []
+    },
+    {
+      "query_id": "Q022",
+      "relevant_chunks": []
+    },
+    {
+      "query_id": "Q023",
+      "relevant_chunks": []
+    }
+]
+}

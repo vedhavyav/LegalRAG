@@ -81,7 +81,6 @@ def hybrid_search(
     candidate_k: int = 30,
     rrf_k: int = 60,
 ) -> list[dict]:
-    """Retrieve candidates from both systems and fuse their rankings."""
 
     if not query or not query.strip():
         raise ValueError("Query cannot be empty")
@@ -102,18 +101,46 @@ def hybrid_search(
         top_k=candidate_k,
     )
 
+    # Candidate diversity
+    bm25_sources = {
+        result["source_id"] for result in bm25_results
+    }
+
+    semantic_sources = {
+        result["source_id"] for result in semantic_results
+    }
+
+    print("\n========== CANDIDATE DIVERSITY ==========")
+    print("BM25 candidate chunks:", len(bm25_results))
+    print("BM25 unique judgments:", len(bm25_sources))
+    print("Semantic candidate chunks:", len(semantic_results))
+    print("Semantic unique judgments:", len(semantic_sources))
+    print("Combined unique judgments:", len(bm25_sources | semantic_sources))
+
+    # RRF
     fused_results = reciprocal_rank_fusion(
         bm25_results,
         semantic_results,
         rrf_k=rrf_k,
     )
 
-    return diversify_by_judgment(
+    fused_sources = {
+        result["source_id"] for result in fused_results
+    }
+
+    print("Unique judgments after RRF:", len(fused_sources))
+
+    # Final diversification
+    final_results = diversify_by_judgment(
         fused_results,
         top_k=top_k,
         max_chunks_per_source=1,
     )
 
+    print("Final judgments returned:", len(final_results))
+    print("=========================================\n")
+
+    return final_results
 
 
 def diversify_by_judgment(results, top_k=5, max_chunks_per_source=1):

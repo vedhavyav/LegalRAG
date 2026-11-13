@@ -1,0 +1,254 @@
+{
+  "queries": [
+    {
+      "query_id": "Q001",
+      "category": "bail_anticipatory_bail",
+      "query": "What factors should a court consider when deciding whether to grant anticipatory bail?"
+    },
+    {
+      "query_id": "Q002",
+      "category": "bail_anticipatory_bail",
+      "query": "Can anticipatory bail continue after the accused is summoned or a charge sheet is filed?"
+    },
+    {
+      "query_id": "Q003",
+      "category": "bail_anticipatory_bail",
+      "query": "How should courts balance personal liberty and the need for custodial interrogation in bail matters?"
+    },
+    {
+      "query_id": "Q004",
+      "category": "bail_anticipatory_bail",
+      "query": "When can anticipatory bail be refused because the allegations require custodial investigation?"
+    },
+    {
+      "query_id": "Q005",
+      "category": "bail_anticipatory_bail",
+      "query": "What principles govern the cancellation of bail already granted to an accused?"
+    },
+    {
+      "query_id": "Q006",
+      "category": "bail_anticipatory_bail",
+      "query": "Under what circumstances can a court impose conditions while granting anticipatory bail?"
+    },
+{
+      "query_id": "Q007",
+      "category": "bail_anticipatory_bail",
+      "query": "How does the seriousness of an offence affect the decision to grant regular bail?"
+    },
+    {
+      "query_id": "Q008",
+      "category": "bail_anticipatory_bail",
+      "query": "Can an accused seek anticipatory bail when the investigating agency has not yet formally arrested them?"
+    },
+    {
+      "query_id": "Q009",
+      "category": "bail_anticipatory_bail",
+      "query": "What is the distinction between the considerations for anticipatory bail and regular bail?"
+    },
+    {
+      "query_id": "Q010",
+      "category": "bail_anticipatory_bail",
+      "query": "When can a court grant bail despite statutory restrictions on the grant of bail?"
+    },
+    {
+      "query_id": "Q011",
+      "category": "criminal_procedure_arrest",
+      "query": "When can a police officer arrest a person without a warrant under the Code of Criminal Procedure?"
+    },
+    {
+      "query_id": "Q012",
+      "category": "criminal_procedure_arrest",
+      "query": "What reasons must an investigating officer record before making an arrest?"
+    },
+    {
+      "query_id": "Q013",
+      "category": "criminal_procedure_arrest",
+      "query": "What safeguards apply when a person is taken into police custody?"
+    },
+    {
+      "query_id": "Q014",
+      "category": "criminal_procedure_arrest",
+      "query": "When is custodial interrogation considered necessary during a criminal investigation?"
+    },
+    {
+      "query_id": "Q015",
+      "category": "criminal_procedure_arrest",
+      "query": "What principles guide a High Court when exercising its inherent power to quash criminal proceedings?"
+    },
+    {
+      "query_id": "Q016",
+      "category": "criminal_procedure_arrest",
+      "query": "Can criminal proceedings be quashed when the allegations do not disclose the ingredients of an offence?"
+    },
+    {
+      "query_id": "Q017",
+      "category": "criminal_procedure_arrest",
+      "query": "What is the legal significance of failing to follow arrest procedures?"
+    },
+    {
+      "query_id": "Q018",
+      "category": "criminal_procedure_arrest",
+      "query": "How should courts assess whether an arrest was necessary rather than routine?"
+    },
+     {
+      "query_id": "Q019",
+      "category": "criminal_procedure_arrest",
+      "query": "What is the scope of judicial review over the investigating agency's decision to arrest?"
+    },
+    {
+      "query_id": "Q020",
+      "category": "criminal_procedure_arrest",
+      "query": "When can an accused challenge the continuation of criminal proceedings as an abuse of process?"
+    },
+    {
+      "query_id": "Q021",
+      "category": "constitutional_law",
+      "query": "How does the right to life and personal liberty apply during a criminal investigation?"
+    },
+    {
+      "query_id": "Q022",
+      "category": "constitutional_law",
+      "query": "What constitutional protections are available to a person facing arbitrary arrest?"
+    },
+    {
+      "query_id": "Q023",
+      "category": "constitutional_law",
+      "query": "How do courts apply the equality guarantee when examining unequal treatment in criminal proceedings?"
+    },
+    {
+      "query_id": "Q024",
+      "category": "constitutional_law",
+      "query": "What does procedural fairness require when state action affects personal liberty?"
+    },
+    {
+      "query_id": "Q025",
+      "category": "constitutional_law",
+      "query": "How do courts balance individual liberty against the interests of a criminal investigation?"
+    },
+    {
+      "query_id": "Q026",
+      "category": "constitutional_law",
+      "query": "When can state action in criminal proceedings be challenged as arbitrary under Article 14?"
+    },
+    {
+      "query_id": "Q027",
+      "category": "constitutional_law",
+      "query": "What constitutional limits apply to restrictions on personal liberty?"
+    },
+    {
+      "query_id": "Q028",
+      "category": "constitutional_law",
+      "query": "How do constitutional rights influence the interpretation of criminal procedure?"
+    },
+    {
+      "query_id": "Q029",
+      "category": "constitutional_law",
+      "query": "What safeguards protect an accused person against arbitrary or excessive state action?"
+    },
+    {
+      "query_id": "Q030",
+      "category": "constitutional_law",
+      "query": "How should courts examine whether a restriction on liberty is fair, just and reasonable?"
+    },
+    {
+      "query_id": "Q031",
+      "category": "pmla_money_laundering",
+      "query": "What conditions must be satisfied before bail can be granted under the Prevention of Money Laundering Act?"
+    },
+    {
+      "query_id": "Q032",
+      "category": "pmla_money_laundering",
+      "query": "How have courts interpreted the twin conditions for bail under Section 45 of the PMLA?"
+    },
+    {
+      "query_id": "Q033",
+      "category": "pmla_money_laundering",
+      "query": "What is the meaning and scope of proceeds of crime under the PMLA?"
+    },
+    {
+      "query_id": "Q034",
+      "category": "pmla_money_laundering",
+      "query": "How does the PMLA define the offence of money laundering?"
+    },
+    {
+      "query_id": "Q035",
+      "category": "pmla_money_laundering",
+      "query": "What is the relationship between the scheduled offence and the offence of money laundering?"
+    },
+    {
+      "query_id": "Q036",
+      "category": "pmla_money_laundering",
+      "query": "Can an accused obtain bail under the PMLA when the statutory twin conditions are difficult to satisfy?"
+    },
+    {
+      "query_id": "Q037",
+      "category": "pmla_money_laundering",
+      "query": "What powers do enforcement authorities have during an investigation under the PMLA?"
+    },
+    {
+      "query_id": "Q038",
+      "category": "pmla_money_laundering",
+      "query": "How should courts assess the legality of attachment proceedings involving alleged proceeds of crime?"
+    },
+    {
+      "query_id": "Q039",
+      "category": "pmla_money_laundering",
+      "query": "What considerations apply when deciding bail in a PMLA prosecution?"
+    },
+    {
+      "query_id": "Q040",
+      "category": "pmla_money_laundering",
+      "query": "How have courts considered constitutional concerns relating to arrest and bail under the PMLA?"
+    },
+    {
+      "query_id": "Q041",
+      "category": "evidence_other_criminal_law",
+      "query": "Under what circumstances can information supplied by an accused in custody be admissible under Section 27 of the Evidence Act?"
+    },
+    {
+      "query_id": "Q042",
+      "category": "evidence_other_criminal_law",
+      "query": "What portion of a custodial disclosure statement may be proved under Section 27 of the Evidence Act?"
+    },
+    {
+      "query_id": "Q043",
+      "category": "evidence_other_criminal_law",
+      "query": "How should a court evaluate circumstantial evidence in a criminal trial?"
+    },
+    {
+      "query_id": "Q044",
+      "category": "evidence_other_criminal_law",
+      "query": "What principles must be satisfied before a conviction can rest entirely on circumstantial evidence?"
+    },
+    {
+      "query_id": "Q045",
+      "category": "evidence_other_criminal_law",
+      "query": "How can the prosecution establish a chain of circumstances that points to the guilt of the accused?"
+    },
+    {
+      "query_id": "Q046",
+      "category": "evidence_other_criminal_law",
+      "query": "What are the essential elements required to establish criminal conspiracy?"
+    },
+    {
+      "query_id": "Q047",
+      "category": "evidence_other_criminal_law",
+      "query": "How should courts assess inconsistencies between witness testimony and other evidence?"
+    },
+    {
+      "query_id": "Q048",
+      "category": "evidence_other_criminal_law",
+      "query": "When can the testimony of a hostile witness be relied upon by the prosecution or defence?"
+    },
+    {
+      "query_id": "Q049",
+      "category": "evidence_other_criminal_law",
+      "query": "What standard of proof applies when determining criminal guilt?"
+    },
+    {
+      "query_id": "Q050",
+      "category": "evidence_other_criminal_law",
+      "query": "How should courts distinguish suspicion from proof in a criminal case?"
+    }
+  ]
+}

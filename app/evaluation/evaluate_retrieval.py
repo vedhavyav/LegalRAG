@@ -3,12 +3,6 @@ from pathlib import Path
 from statistics import mean
 from time import perf_counter
 
-from app.retrieval.search import search as bm25_search
-from app.retrieval.semantic_search import semantic_search
-from app.retrieval.hybrid_search import hybrid_search
-from app.retrieval.query_expansion import expand_query
-
-
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DATASET_PATH = PROJECT_ROOT / "data" / "evaluation" / "test_queries.json"
 

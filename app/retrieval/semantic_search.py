@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-
+from functools import lru_cache
 import numpy as np
 from sentence_transformers import SentenceTransformer
 
@@ -9,7 +9,9 @@ from app.retrieval.embeddings import (
     EMBEDDINGS_PATH,
     METADATA_PATH,
 )
-
+@lru_cache(maxsize=1)
+def get_embedding_model():
+    return SentenceTransformer(MODEL_NAME)
 
 def semantic_search(
     query: str,
@@ -46,7 +48,7 @@ def semantic_search(
             "Embedding and metadata counts do not match."
         )
 
-    model = SentenceTransformer(MODEL_NAME)
+    model = get_embedding_model()
 
     query_embedding = model.encode(
         [query],
