@@ -1,593 +1,592 @@
 # LegalRAG
 
-A Retrieval-Augmented Generation (RAG) system for answering legal questions using a local LLM, with an emphasis on **grounded answers, retrieval quality, and evaluation**.
+A Retrieval-Augmented Generation (RAG) system for retrieving and answering questions over Indian legal documents using hybrid search and a locally hosted Large Language Model (LLM).
 
-The project is being developed as a local-first LegalRAG pipeline. The current LLM runtime is **Ollama**, allowing the model to run locally instead of relying on a hosted API.
+LegalRAG combines **BM25 keyword retrieval**, **semantic vector retrieval**, and **Reciprocal Rank Fusion (RRF)** to identify relevant legal passages. The retrieved context is then supplied to a local LLM through Ollama to generate an answer.
+
+The project focuses on building a practical legal retrieval pipeline and evaluating its retrieval performance.
 
 ---
 
-## Project Goals
+## 1. Project Overview
 
-LegalRAG is intended to:
+Searching legal documents is challenging because legal questions may use different terminology from the language used in judgments. A keyword-only search can miss passages that are semantically relevant, while semantic search alone may overlook important legal terms and expressions.
 
-- Retrieve relevant passages from a legal document collection.
-- Use those passages as evidence for answering legal questions.
-- Reduce unsupported or hallucinated answers.
-- Evaluate both retrieval and final-answer quality.
-- Make the evaluation process reproducible instead of relying only on subjective inspection.
-- Keep the core workflow local and practical for modest hardware.
+LegalRAG addresses this problem through a hybrid retrieval approach.
 
-The central idea is:
+### Project objectives
+
+- Collect and organize Indian legal judgments.
+- Extract and preprocess legal document text.
+- Divide documents into overlapping chunks for retrieval.
+- Generate dense vector embeddings for legal passages.
+- Implement keyword-based retrieval using BM25.
+- Implement semantic retrieval using Sentence Transformers.
+- Combine retrieval rankings using Reciprocal Rank Fusion.
+- Generate responses using a locally hosted LLM.
+- Evaluate retrieval performance using a fixed test-query dataset.
+
+### High-level workflow
 
 ```text
-Legal Documents
-      │
-      ▼
-Document Processing
-      │
-      ▼
-Chunking / Indexing
-      │
-      ▼
-Retriever
-      │
-      ▼
-Relevant Legal Context
-      │
-      ▼
-Local LLM (Ollama)
-      │
-      ▼
-Grounded Answer
-      │
-      ▼
-Evaluation
+Indian Legal Documents
+          |
+          v
+   Document Ingestion
+          |
+          v
+  Text Preprocessing
+          |
+          v
+   Document Chunking
+          |
+          +----------------------+
+          |                      |
+          v                      v
+     BM25 Index           Embedding Generation
+          |                      |
+          |                 Vector Storage
+          |                      |
+          v                      v
+    BM25 Retrieval       Semantic Retrieval
+          |                      |
+          +----------+-----------+
+                     |
+                     v
+          Reciprocal Rank Fusion
+                     |
+                     v
+           Final Retrieved Context
+                     |
+                     v
+             Local LLM (Ollama)
+                     |
+                     v
+              Generated Answer
 ```
 
 ---
 
-## Current Local LLM Setup
+## 2. Technology Stack
 
-The project uses **Ollama** as the local model runtime.
+| Component | Technology |
+|---|---|
+| Programming language | Python |
+| Legal document source | Indian Kanoon API |
+| Relational database | PostgreSQL |
+| Embedding model | `sentence-transformers/all-MiniLM-L6-v2` |
+| Embedding dimension | 384 |
+| Embedding storage | NumPy arrays and JSON metadata |
+| Keyword retrieval | Custom BM25 implementation |
+| Semantic retrieval | Sentence Transformers |
+| Hybrid retrieval | Reciprocal Rank Fusion (RRF) |
+| Experimental query expansion | KeyBERT |
+| Local LLM runtime | Ollama |
+| Observed generation model | `llama3.1:8b` |
 
-### Recommended model
+---
 
-For the current hardware:
+## 3. Dataset
 
-- **RAM:** 16 GB
-- **Dedicated GPU:** None
-- **Runtime:** Ollama
+The project uses Indian legal documents collected through the Indian Kanoon API.
 
-The selected model is:
+The target dataset contains 100 classified judgments, divided across five legal categories.
+
+| Legal category | Supreme Court | High Courts | Total |
+|---|---:|---:|---:|
+| Bail and anticipatory bail | 10 | 10 | 20 |
+| Criminal procedure and arrest | 10 | 10 | 20 |
+| Constitutional law | 10 | 10 | 20 |
+| PMLA and money laundering | 10 | 10 | 20 |
+| Evidence and other criminal law | 10 | 10 | 20 |
+| **Total** | **50** | **50** | **100** |
+
+The collected corpus and database contain additional records beyond these 100 classified target judgments.
+
+### Dataset and processing statistics
+
+| Measurement | Count |
+|---|---:|
+| Classified target judgments | 100 |
+| Valid judgments in corpus files | 109 |
+| Records in PostgreSQL | 110 |
+| Generated document chunks | 8,280 |
+| Embedding dimensions | 384 |
+
+The database record count should not be interpreted as the number of classified judgments. It also includes unclassified records.
+
+---
+
+## 4. System Architecture
+
+The implementation is organized into the following major stages.
+
+### 4.1 Document ingestion
+
+Legal documents are collected using the Indian Kanoon API.
+
+The ingestion process stores raw and processed document data separately.
+
+- Raw document data: `data/raw`
+- Processed document data: `data/processed`
+- Ingestion manifests: `data/manifests`
+
+### 4.2 Text preprocessing
+
+The collected document text is prepared for downstream processing.
+
+Preprocessing supports consistent document representation and prepares the extracted text for chunking, indexing, and embedding generation.
+
+### 4.3 Document chunking
+
+Long legal judgments are divided into smaller overlapping passages.
+
+The current implementation uses paragraph-aware, character-based chunking.
+
+| Parameter | Value |
+|---|---:|
+| Chunk size | 1,500 characters |
+| Chunk overlap | 200 characters |
+
+Overlap helps preserve contextual continuity between adjacent chunks.
+
+The generated chunks retain document identifiers and chunk-level metadata so retrieved passages can be traced back to their source judgments.
+
+### 4.4 Database storage
+
+PostgreSQL stores the legal documents and their corresponding chunks.
+
+The main database tables are:
+
+**`legal_documents`**
+
+Stores document-level information such as:
+
+- Source ID
+- Document title
+- Court
+- Judgment date
+- Source URL
+- Full text
+- Citation information
+- Categories
+- Related queries
+- Additional metadata
+
+**`document_chunks`**
+
+Stores chunk-level information such as:
+
+- Chunk ID
+- Source document ID
+- Chunk index
+- Chunk text
+- Character start and end positions
+- Chunk metadata
+
+The relationship between the tables is maintained through the document source ID.
+
+### 4.5 Embedding generation
+
+Legal chunks are converted into dense vector representations using:
+
+`sentence-transformers/all-MiniLM-L6-v2`
+
+The model generates 384-dimensional embeddings.
+
+The vectors are L2-normalized before storage.
+
+Current embedding files:
 
 ```text
-qwen2.5:7b
+data/
+└── embeddings/
+    ├── embeddings.npy
+    └── metadata.json
 ```
 
-Run it with:
+The NumPy file stores the embedding vectors, while the JSON metadata file maintains the corresponding chunk information.
 
-```bash
-ollama run qwen2.5:7b
-```
-
-### Important: the model is downloaded only once
-
-Running:
-
-```bash
-ollama run qwen2.5:7b
-```
-
-does **not** normally download the model again every time.
-
-Ollama keeps downloaded models locally. If the model is already present, the command starts the existing model.
-
-Check installed models with:
-
-```bash
-ollama list
-```
-
-If `qwen2.5:7b` appears in the list, it is already installed.
-
-If Ollama reports that it is downloading layers again, verify that:
-
-1. The Ollama installation being used is the expected one.
-2. The model name is exactly the same.
-3. The Ollama model storage has not been removed or changed.
-4. You are not accidentally using a different Ollama environment or machine.
+**Note:** Embeddings are stored separately as NumPy arrays and JSON metadata. They are not stored in PostgreSQL using pgvector.
 
 ---
 
-## Hardware Considerations
+## 5. Retrieval System
 
-The current setup is intentionally designed around CPU-only execution.
+LegalRAG uses a hybrid retrieval architecture combining lexical and semantic search.
 
-With 16 GB RAM and no dedicated GPU:
+### 5.1 BM25 retrieval
 
-- A 7B-class quantized model is a practical starting point.
-- Larger models may provide better reasoning but can become significantly slower or more memory-intensive.
-- Retrieval quality is especially important because the system should not depend on the LLM alone to find the relevant law.
-- Keeping the retrieved context focused helps both answer quality and inference speed.
+BM25 is used to retrieve passages based on keyword relevance.
 
-The project therefore treats **retrieval and evaluation as first-class components**, rather than simply increasing model size.
+The current custom implementation uses:
+
+| Parameter | Value |
+|---|---:|
+| `k1` | 1.5 |
+| `b` | 0.75 |
+
+BM25 is useful when a query contains specific legal terminology, statutory references, or important keywords.
+
+### 5.2 Semantic retrieval
+
+Semantic retrieval identifies passages based on the similarity between the query embedding and document chunk embeddings.
+
+The same Sentence Transformer model is used for query and document embeddings.
+
+Since the vectors are L2-normalized, their dot product represents cosine similarity.
+
+Semantic retrieval helps identify relevant passages even when the wording of a question differs from the wording in the judgment.
+
+### 5.3 Hybrid retrieval using Reciprocal Rank Fusion
+
+BM25 and semantic retrieval produce separate ranked result lists.
+
+LegalRAG combines these rankings using Reciprocal Rank Fusion.
+
+The RRF score is calculated as:
+
+\[
+RRF(d)=\sum_{r \in R}\frac{1}{k+rank_r(d)}
+\]
+
+Where:
+
+- \(d\) represents a retrieved chunk.
+- \(R\) represents the retrieval systems.
+- \(rank_r(d)\) represents the rank of the chunk in a retrieval system.
+- \(k\) is the RRF constant.
+
+The implementation uses:
+
+| Parameter | Value |
+|---|---:|
+| Candidate count (`candidate_k`) | 30 |
+| Final result count (`top_k`) | 5 |
+| RRF constant (`rrf_k`) | 60 |
+
+The final retrieval stage also applies judgment-level diversification, limiting the final results to a maximum of one chunk per judgment.
+
+This helps reduce repeated results from the same legal document.
 
 ---
 
-## High-Level Architecture
+## 6. Experimental Query Expansion: KeyBERT
 
-The intended pipeline consists of the following stages.
+KeyBERT was explored as an auxiliary query-expansion technique.
 
-### 1. Document ingestion
+The implementation uses the same Sentence Transformer model to extract candidate keywords and keyphrases from a query.
 
-Legal source documents are loaded into the system.
+Current extraction configuration:
 
-Typical processing may include:
+| Parameter | Value |
+|---|---|
+| Embedding model | `all-MiniLM-L6-v2` |
+| Keyphrase n-gram range | 1–3 |
+| Stop words | English |
+| Maximum candidate phrases | 5 |
 
-- Reading source files.
-- Extracting text.
-- Cleaning unnecessary formatting.
-- Preserving useful legal structure where possible.
+The experimental implementation includes:
 
-### 2. Chunking
+- Keyword and keyphrase extraction.
+- Filtering of phrases already represented in the original query.
+- Appending selected phrases to form an expanded query.
 
-Documents are divided into smaller passages suitable for retrieval.
+**Current limitation:** KeyBERT is not integrated into the main BM25, semantic, or hybrid retrieval pipeline. It has only been explored using a small number of test queries, and no reliable retrieval improvement has been established.
 
-Chunking is important because excessively large chunks can dilute retrieval relevance, while excessively small chunks can remove the context needed to understand a legal provision.
+Therefore, the main retrieval evaluation focuses on BM25, semantic retrieval, and hybrid retrieval.
 
-### 3. Indexing
+---
 
-The processed chunks are indexed so that relevant passages can be retrieved for a user query.
+## 7. Answer Generation
 
-### 4. Retrieval
+LegalRAG uses Ollama to run a local Large Language Model.
 
-For a legal question, the retriever identifies passages that are most relevant to the question.
-
-Conceptually:
+The observed application execution uses:
 
 ```text
-Question
-   │
-   ▼
-Query representation
-   │
-   ▼
-Retriever
-   │
-   ▼
-Top-k legal passages
+llama3.1:8b
 ```
 
-### 5. Generation
+The generation stage receives the user query and the retrieved legal context.
 
-The retrieved passages are supplied to the local Ollama model.
-
-The model should answer using the retrieved legal evidence rather than relying solely on its internal knowledge.
-
-### 6. Evaluation
-
-The system is evaluated to determine whether it is actually improving.
-
-Evaluation should consider at least:
-
-- Whether the relevant evidence was retrieved.
-- Whether the final answer is supported by the evidence.
-- Whether the answer addresses the question.
-- Whether the system introduces unsupported claims.
-- Whether improvements to one component cause regressions elsewhere.
-
----
-
-## Evaluation Philosophy
-
-A major purpose of this project is to avoid repeatedly changing the system without knowing whether it actually became better.
-
-The evaluation workflow should therefore follow:
+The intended response-generation process is:
 
 ```text
-Baseline
-   │
-   ▼
-Change one meaningful component
-   │
-   ▼
-Run the same evaluation set
-   │
-   ▼
-Compare metrics / failures
-   │
-   ▼
-Keep or reject the change
-   │
-   ▼
-Repeat
+User Question
+      |
+      v
+Hybrid Retrieval
+      |
+      v
+Top 5 Legal Judgments
+      |
+      v
+Context Preparation
+      |
+      v
+Ollama LLM
+      |
+      v
+Generated Legal Response
 ```
 
-The goal is not to make the system appear better on a handful of manually selected examples.
+Using retrieved context provides the model with relevant legal material instead of relying entirely on its internal knowledge.
 
-The goal is to establish whether a change produces **measurable improvement on a consistent evaluation set**.
-
----
-
-## Evaluation Layers
-
-### Retrieval evaluation
-
-Retrieval should be evaluated independently from generation.
-
-Important questions include:
-
-- Was the relevant document retrieved?
-- Was the relevant passage retrieved?
-- How high did the relevant passage rank?
-- How often does the retriever fail before the LLM even receives the correct evidence?
-
-Useful retrieval metrics can include:
-
-- Recall@k
-- Precision@k
-- Hit Rate
-- Mean Reciprocal Rank (MRR)
-
-The exact metrics used by the project should match the available ground-truth evaluation data.
-
-### Generation evaluation
-
-The final answer should be evaluated for:
-
-- **Correctness** — does it answer the legal question correctly?
-- **Faithfulness / groundedness** — are claims supported by retrieved evidence?
-- **Relevance** — does it stay focused on the question?
-- **Completeness** — does it use the necessary evidence?
-- **Citation / evidence quality** — where applicable, can claims be traced back to source material?
-
-A high-quality RAG system needs both good retrieval and good generation.
-
-```text
-Good Retrieval + Good Generation = Useful LegalRAG
-
-Bad Retrieval + Good Generation = Usually bad answer
-
-Good Retrieval + Bad Generation = Evidence exists, but answer can still fail
-```
+However, retrieval-augmented generation does not guarantee that every generated statement is legally correct or fully supported by the retrieved documents. Generated answers and citations require verification.
 
 ---
 
-## Development Phases
+## 8. Evaluation
 
-The project is being developed incrementally.
+The project includes a retrieval evaluation workflow using a fixed dataset of 50 test queries.
 
-The later phases focus increasingly on **evaluation and measurable improvement**, rather than repeatedly rebuilding the same pipeline.
+The test dataset contains 10 queries for each of the five legal categories.
 
-The current work includes the transition toward a more systematic evaluation phase and a local Ollama implementation.
+### 8.1 Evaluation pipeline
 
-When adding a new phase, document:
+The evaluation process includes:
 
-1. What problem the phase solves.
-2. What changed.
-3. What files/components changed.
-4. How the change is tested.
-5. What metric or behavior should improve.
-6. Whether the result actually improved compared with the baseline.
+1. Loading the test queries.
+2. Retrieving candidate chunks using BM25.
+3. Retrieving candidate chunks using semantic search.
+4. Combining rankings using RRF.
+5. Constructing a candidate pool.
+6. Assigning category-based relevance labels.
+7. Calculating retrieval metrics.
+8. Comparing the retrieval methods.
+
+### 8.2 Candidate pool
+
+The candidate pool is constructed from the union of BM25 and semantic retrieval results.
+
+The evaluation produced:
+
+| Measurement | Value |
+|---|---:|
+| Test queries | 50 |
+| Candidate rows | 2,703 |
+| Unique candidate judgments | 105 |
+| Relevant candidate rows | 1,885 |
+| Non-relevant candidate rows | 816 |
+| Unknown candidate rows | 2 |
+
+### 8.3 Relevance-labeling approach
+
+The current evaluation uses automatically assigned category-based labels derived from document metadata and classification rules.
+
+A candidate is marked relevant when its document category matches the query category.
+
+This is a weakly supervised evaluation approach. It does not establish whether an individual passage directly answers the legal question.
+
+The results should therefore be interpreted as category-alignment retrieval measurements rather than manually verified legal passage relevance.
+
+### 8.4 Evaluation metrics
+
+The main evaluation uses:
+
+- **Precision@5:** Proportion of judged results in the top five that are relevant.
+- **Recall@5:** Relevant results retrieved in the top five relative to the relevant candidates in the shared candidate pool.
+- **Mean Reciprocal Rank (MRR@5):** Reciprocal rank of the first relevant result.
+- **nDCG@5:** Ranking quality based on the position of relevant results.
+
+Recall@5 is pool-relative and should not be interpreted as recall over the entire legal corpus.
+
+### 8.5 Retrieval results
+
+The following results were obtained from the current 50-query evaluation.
+
+| Metric | BM25 | Semantic | Hybrid |
+|---|---:|---:|---:|
+| Precision@5 | 0.720 | 0.676 | 0.724 |
+| Recall@5 | 0.095 | 0.091 | 0.098 |
+| MRR@5 | 0.819 | 0.786 | 0.787 |
+| nDCG@5 | 0.716 | 0.673 | 0.711 |
+
+The hybrid method achieved the highest Precision@5 and pool-relative Recall@5 among the three methods. BM25 achieved the highest MRR@5 and nDCG@5.
+
+The results indicate that hybrid retrieval provides a useful combination of lexical and semantic retrieval signals, but it does not outperform BM25 on every metric.
+
+**Evaluation limitation:** These measurements depend on automatically assigned category labels. They should not be treated as proof of legal answer correctness, citation accuracy, or passage-level relevance.
 
 ---
 
-## Project Structure
+## 9. End-to-End Application Testing
 
-The exact directory structure may evolve during development. Keep this section synchronized with the actual repository.
+The application was also executed using representative legal questions from the five categories.
 
-A typical structure is:
+The tested queries covered:
 
-```text
-LegalRAG/
-│
-├── data/                 # Legal source documents and datasets
-├── evaluation/           # Evaluation datasets, scripts and results
-├── src/                  # Application / RAG implementation
-│   ├── ingestion/
-│   ├── retrieval/
-│   ├── generation/
-│   └── evaluation/
-│
-├── tests/                # Automated tests
-│
-├── .venv/                # Local Python virtual environment (not committed)
-├── requirements.txt      # Python dependencies
-├── README.md
-└── ...
-```
+- Anticipatory bail.
+- Police custody and procedural safeguards.
+- Article 21 and personal liberty.
+- PMLA bail conditions.
+- Principles governing circumstantial evidence.
 
-Do not commit `.venv/` or other machine-specific generated files to version control.
+For each query, the application generated BM25 and semantic candidate lists, combined the rankings, and returned five final judgments.
+
+The observed executions demonstrate that the retrieval and generation pipeline runs end to end.
+
+However, successful execution alone does not establish that every generated legal statement is correct. Answer faithfulness and citation accuracy require separate verification.
 
 ---
 
-## Python Environment
+## 10. Running the Project
 
-Create and activate a virtual environment.
+### 10.1 Prerequisites
 
-### Windows PowerShell
+- Python
+- PostgreSQL
+- Ollama
+- Required Python dependencies
+- Access to the configured legal document dataset and database
+
+### 10.2 Create a virtual environment
+
+**Windows PowerShell**
 
 ```powershell
 python -m venv .venv
-```
-
-Activate it:
-
-```powershell
 .\.venv\Scripts\Activate.ps1
 ```
 
-Verify the Python executable:
+Verify the Python environment:
 
 ```powershell
 python -c "import sys; print(sys.executable)"
 ```
 
-The output should point to the project's virtual environment, for example:
-
-```text
-...\LegalRAG\.venv\Scripts\python.exe
-```
-
-Install dependencies when a `requirements.txt` file is available:
+Install the project dependencies:
 
 ```powershell
 pip install -r requirements.txt
 ```
 
----
+### 10.3 Verify PostgreSQL
 
-## Ollama Setup
+Ensure that PostgreSQL is running and that the database connection settings used by the application are configured correctly.
 
-Install Ollama on the development machine and verify that it is available from the terminal:
+### 10.4 Verify Ollama
+
+Check the Ollama installation:
 
 ```bash
 ollama --version
 ```
 
-Check available local models:
+Check installed models:
 
 ```bash
 ollama list
 ```
 
-Run the selected model:
+Run the observed application model:
 
 ```bash
-ollama run qwen2.5:7b
+ollama run llama3.1:8b
 ```
 
-For application code that communicates with Ollama, the Ollama service must be available to the application.
+The model must be available locally, and the Ollama service must be accessible to the application.
 
-Before debugging the LegalRAG pipeline, verify the Ollama installation independently. This separates:
+### 10.5 Run the application
 
-```text
-Ollama problem
-```
-
-from:
-
-```text
-LegalRAG integration problem
-```
-
----
-
-## Typical Development Workflow
-
-A disciplined workflow is:
-
-```text
-1. Activate .venv
-2. Verify Python
-3. Verify Ollama
-4. Verify qwen2.5:7b is installed
-5. Run the LegalRAG pipeline
-6. Run the evaluation set
-7. Inspect failures
-8. Change one component
-9. Re-run the same evaluation
-10. Compare against the baseline
-```
-
-Avoid changing retrieval, prompting, chunking, model, and evaluation criteria simultaneously. Doing so makes it difficult to determine which change caused an improvement or regression.
-
----
-
-## Troubleshooting
-
-### `python` points to the wrong environment
-
-Run:
-
-```powershell
-python -c "import sys; print(sys.executable)"
-```
-
-If it does not point to `.venv`, activate the virtual environment again:
-
-```powershell
-.\.venv\Scripts\Activate.ps1
-```
-
----
-
-### Ollama model appears to download again
-
-First check:
+From the project root, execute:
 
 ```bash
-ollama list
+python -m app.ask
 ```
 
-If the model is listed, run:
+The application accepts a legal question, performs retrieval, and generates a response using the local LLM.
+
+### 10.6 Run document chunking
 
 ```bash
-ollama run qwen2.5:7b
+python -m app.db.chunks
 ```
 
-If the model is not listed, Ollama does not currently have that model available in its local model store.
+The chunking process uses the configured chunk size and overlap.
 
-Do not assume that every `ollama run` command performs a fresh download; normally Ollama reuses an already downloaded model.
+### 10.7 Generate embeddings
 
----
-
-### Generation is slow
-
-CPU-only inference is expected to be slower than GPU inference.
-
-Possible improvements include:
-
-- Reduce unnecessary context.
-- Retrieve fewer but more relevant chunks.
-- Avoid excessively large prompts.
-- Use an appropriate quantized model.
-- Reduce unnecessary generation length.
-- Profile retrieval and generation separately.
-
-Do not immediately solve a speed problem by switching to a much larger model. First establish whether the model is actually the bottleneck.
-
----
-
-### Answers are incorrect despite a capable model
-
-Inspect retrieval before changing the LLM.
-
-A common RAG failure pattern is:
-
-```text
-User question
-     ↓
-Wrong / incomplete evidence retrieved
-     ↓
-LLM receives bad context
-     ↓
-Incorrect answer
+```bash
+python -m app.retrieval.embeddings
 ```
 
-If the correct legal passage never reaches the model, improving the prompt alone cannot reliably fix the underlying retrieval failure.
+This generates the embedding array and corresponding metadata for the document chunks.
+
+Run data preparation and indexing steps only when required by the current state of the database and embedding files.
 
 ---
 
-## Reproducibility
+## 11. Project Limitations
 
-Evaluation results should be reproducible.
+The current implementation has several limitations.
 
-Record, where relevant:
-
-- Model name and version/tag.
-- Retrieval configuration.
-- Chunking configuration.
-- Top-k value.
-- Prompt version.
-- Evaluation dataset version.
-- Relevant software/dependency versions.
-- Evaluation metrics.
-- Date of evaluation.
-
-A result without a known configuration is difficult to compare with future experiments.
+1. **Dataset size:** The corpus is limited compared with the full volume of Indian legal judgments.
+2. **Chunking strategy:** The current character-based chunking configuration has not been established as optimal through a systematic chunk-size experiment.
+3. **Embedding model:** The current MiniLM model provides compact embeddings but may not capture all domain-specific legal nuances.
+4. **Evaluation labels:** Relevance labels are automatically assigned using category information rather than manual passage-level annotation.
+5. **KeyBERT integration:** KeyBERT remains an experimental component and is not part of the main retrieval pipeline.
+6. **Generation quality:** Generated legal answers may contain unsupported, incomplete, or inaccurate statements.
+7. **Citation verification:** Retrieved source references do not automatically guarantee that every generated claim is supported by the cited passage.
+8. **Evaluation scope:** The current quantitative evaluation focuses on retrieval performance rather than a complete human evaluation of legal answer quality.
 
 ---
 
-## Design Principles
+## 12. Future Scope
 
-### 1. Evidence before confidence
+Possible extensions include:
 
-The system should prefer an answer grounded in retrieved legal material over an impressive-sounding unsupported answer.
+- Expanding the legal document collection.
+- Improving legal-domain text preprocessing.
+- Experimenting with alternative chunking strategies.
+- Exploring legal-domain embedding models.
+- Integrating and systematically evaluating query expansion.
+- Developing manually annotated passage-level relevance judgments.
+- Evaluating answer faithfulness and citation correctness.
+- Improving generation prompts and context selection.
+- Comparing retrieval configurations using reproducible experiments.
 
-### 2. Retrieval is not a solved problem
-
-A strong LLM does not compensate for consistently poor retrieval.
-
-### 3. Evaluate changes
-
-Every significant modification should have a measurable reason for being kept.
-
-### 4. Keep experiments controlled
-
-Change one major variable at a time whenever possible.
-
-### 5. Separate failures
-
-Distinguish:
-
-```text
-Data problem
-    ↓
-Chunking problem
-    ↓
-Retrieval problem
-    ↓
-Prompt/context problem
-    ↓
-Generation problem
-    ↓
-Evaluation problem
-```
-
-This prevents debugging the wrong layer.
-
-### 6. Prefer reproducible improvements
-
-A change that improves one example but hurts the evaluation set should not be treated as a successful improvement.
+These are potential extensions and should not be interpreted as already implemented features.
 
 ---
 
-## Current Status
+## 13. Design Principles
 
-**Project:** LegalRAG  
-**LLM Runtime:** Ollama  
-**Current Model:** `qwen2.5:7b`  
-**Target Hardware:** 16 GB RAM, CPU-only / no dedicated GPU  
-**Development Focus:** RAG pipeline evaluation and measurable improvement
+### Evidence before generation
 
-The project is moving from simply making the pipeline work toward determining **whether each component actually improves legal question-answering performance**.
+The system prioritizes retrieving relevant legal material before generating an answer.
+
+### Hybrid retrieval
+
+Combining lexical and semantic retrieval helps address different types of query-document matching.
+
+### Reproducible evaluation
+
+Retrieval methods should be compared using the same test-query dataset and evaluation configuration.
+
+### Separation of components
+
+Document processing, indexing, retrieval, and generation are treated as distinct stages so that failures can be investigated at the appropriate layer.
+
+### Transparent limitations
+
+Experimental components and evaluation limitations are documented rather than presented as completed improvements.
 
 ---
 
-## Security and Legal Disclaimer
+## 14. Security and Legal Disclaimer
 
-This project is intended for research, development, and educational purposes.
+LegalRAG is developed for academic, research, and educational purposes.
 
 It is not a substitute for advice from a qualified legal professional.
 
-Legal information can be jurisdiction-specific, time-sensitive, and dependent on facts that may not be present in the retrieved documents. A generated answer should therefore be treated as an aid to research rather than as authoritative legal advice.
+Generated responses may be incomplete, inaccurate, or based on retrieved material that does not fully address the legal question. Users should independently verify legal provisions, judgments, and citations before relying on any output.
 
-When using real legal documents, also consider:
-
-- Privacy.
-- Confidentiality.
-- Copyright and licensing.
-- Personally identifiable information.
-- Data retention.
-- Applicable legal and organizational requirements.
+When handling legal documents, privacy, confidentiality, copyright, licensing, and applicable data-protection requirements should also be considered.
 
 ---
 
-## Contributing / Development Notes
+## 15. License
 
-When making a change:
-
-```text
-Problem
-  ↓
-Hypothesis
-  ↓
-Implementation
-  ↓
-Evaluation
-  ↓
-Comparison with baseline
-  ↓
-Decision
-```
-
-Document the result even when the experiment fails.
-
-A failed experiment is useful if it tells us which direction does **not** improve the system.
-
----
-
-## License
-
-Add the project's license here once the repository's licensing decision has been made.
+Add the project's license information once the repository's licensing decision has been finalized.
