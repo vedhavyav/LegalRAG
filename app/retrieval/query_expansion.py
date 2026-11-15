@@ -1,64 +1,107 @@
-from sentence_transformers import SentenceTransformer
-from keybert import KeyBERT
 import re
+from functools import lru_cache
+
+from keybert import KeyBERT
+from sentence_transformers import SentenceTransformer
 
 MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 
-embedding_model = SentenceTransformer(MODEL_NAME)
-keyword_model = KeyBERT(model=embedding_model)
+# Keep pseudo-relevance feedback bounded: the first few retrieved passages
+# provide candidate legal terminology without sending the entire corpus to KeyBERT.
+FEEDBACK_K = 10
+MAX_FEEDBACK_CHARS = 12000
 
 
-def extract_query_keywords(
-        query: str, 
-        top_n: int = 5,     
-) -> list[tuple[str, float]]: 
-    """Extract candidate keywords and phrases from a legal query"""
-    if not query or not query.strip():
-        raise ValueError("Query cannot be Empty")
+@lru_cache(maxsize=1)
+def get_keyword_model():
+    """Load the shared embedding model and KeyBERT model once per process."""
+    embedding_model = SentenceTransformer(MODEL_NAME)
+    return KeyBERT(model=embedding_model)
+
+
+def _normalize_phrase(value: str) -> str:
+    return " ".join(re.findall(r"\b\w+\b", value.casefold()))
+
+def extract_keywords_from_passages(
+    passages: list[dict],
+    top_n: int = 5,
+) -> list[tuple[str, float]]:
+    """
+    Extract candidate keyphrases from initially retrieved legal passages.
+
+    Each passage is expected to contain a `chunk_text` field.
+    """
     if top_n <= 0:
         raise ValueError("top_n must be positive")
-    keywords =  keyword_model.extract_keywords(
-        query, 
-        keyphrase_ngram_range=(1,3),
+
+    texts = []
+    seen_texts = set()
+
+    for passage in passages:
+        text = (passage.get("chunk_text") or "").strip()
+        if not text or text in seen_texts:
+            continue
+        seen_texts.add(text)
+        texts.append(text)
+
+    if not texts:
+        return []
+
+    feedback_document = "\n\n".join(texts)[:MAX_FEEDBACK_CHARS]
+    if not feedback_document.strip():
+        return []
+
+    keyword_model = get_keyword_model()
+    keywords = keyword_model.extract_keywords(
+        feedback_document,
+        keyphrase_ngram_range=(1, 3),
         stop_words="english",
-        top_n=top_n
+        top_n=top_n,
     )
+
     return [(phrase, float(score)) for phrase, score in keywords]
 
+def expand_query_from_passages(
+    query: str,
+    passages: list[dict],
+    top_n: int = 5,
+) -> tuple[str, list[tuple[str, float]]]:
+    """
+    Expand a query with keyphrases extracted from initial retrieval results.
 
-def expand_query(query: str, top_n: int = 5) -> str:
-    """Expand a query with phrases that are not already present."""
-
+    Returns the expanded query and the selected (phrase, score) pairs.
+    """
     if not query or not query.strip():
         raise ValueError("Query cannot be empty")
 
     original = query.strip()
-    original_normalized = set(
-        re.findall(r"\b\w+\b", original.casefold())
+    original_terms = set(_normalize_phrase(original).split())
+
+    candidates = extract_keywords_from_passages(
+        passages,
+        top_n=top_n,
     )
 
-    keywords = extract_query_keywords(original, top_n=top_n)
-    added_phrases = []
+    selected = []
     seen_phrases = set()
 
-    for phrase, _score in keywords:
-        normalized_phrase = " ".join(
-            re.findall(r"\b\w+\b", phrase.casefold())
-        )
+    for phrase, score in candidates:
+        normalized = _normalize_phrase(phrase)
 
-        if not normalized_phrase or normalized_phrase in seen_phrases:
+        if not normalized or normalized in seen_phrases:
             continue
 
-        phrase_terms = set(normalized_phrase.split())
+        phrase_terms = set(normalized.split())
 
-        # Skip phrases containing only words already in the query.
-        if phrase_terms.issubset(original_normalized):
+        # Do not append a phrase made entirely of words already in the query.
+        if phrase_terms.issubset(original_terms):
             continue
 
-        seen_phrases.add(normalized_phrase)
-        added_phrases.append(phrase)
+        seen_phrases.add(normalized)
+        selected.append((phrase, score))
 
-    if not added_phrases:
-        return original
+    if not selected:
+        return original, []
 
-    return f"{original} {' '.join(added_phrases)}"
+    expanded = f"{original} {' '.join(phrase for phrase, _ in selected)}"
+    return expanded, selected
